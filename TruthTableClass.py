@@ -5,6 +5,8 @@
 #     'classInstance.createColumn("columnName", not for the first term {given in the form of a bool(True for ~P : False for P)}, Index of the first column you are comparing, Operator to be used {'and', 'or', 'xor', 'implies', and 'iff'}, not for the second term {given in the form of a bool(True for ~P : False for P)}, Index of the second column you are comparing)
 # To create a new column that gives the not version of one other column
 #     'classInstance.createNotColumn("columnName", Index of the column you are altering)
+# To display the truth table
+#     'classInstance.display()'
 
 class TruthTable:
     def __init__(self, varCount: int):
@@ -27,9 +29,7 @@ class TruthTable:
                         col.append(True)
                     else:
                         col.append(False)
-                    print(f"{x} : {y}")
             self.columns.append(col)
-            print(i)
 
     def changeColumnName(self, colIndex: int, newName: str) -> None:
         self.head[colIndex] = newName
@@ -94,7 +94,7 @@ class TruthTable:
                 pass
 
     def createNotColumn(self, colName: str, colIndex: int) -> None:
-        self.head.insert(0, colName)
+        self.head.append(colName)
         self.columns.insert(0, [])
         # edits the column index to work with how its programmed
         colNum = -(colIndex + 1)
@@ -105,7 +105,7 @@ class TruthTable:
                 self.columns[0].append(False)
 
     def _addEmptyColumn(self, colName: str) -> None:
-        self.head.insert(0, colName)
+        self.head.append(colName)
         self.columns.insert(0, [])
 
     def _formatXY(self, notX: bool, colIndexX: int, notY: bool, colIndexY: int) -> tuple:
@@ -138,21 +138,24 @@ class TruthTable:
         return not self.xor(p, q)
 
     def display(self) -> None:
-        headerLen = [len(x) for x in self.head]
-        for x in headerLen:
+        headerLen = []
+        for i in range(len(self.head)):
+            x = len(self.head[i])
             if x < 6:
                 x = 6
             x += 3
+            headerLen.append(x)
         for i in range(len(self.head)):
-            print(self.head[i].rjust(10), end=" |")
+            print(self.head[i].rjust(headerLen[i]), end=" |")
         print("")
         for i in range(self.numOfRows):
             for n in range(len(self.head)):
-                boolStr = str(self.columns[-(n+1)][i])
-                print(boolStr.rjust(10), end=" |")
+                print(str(self.columns[-(n+1)][i]).rjust(headerLen[n]), end=" |")
             print("")
 
 
 
-TT = TruthTable(27)
+TT = TruthTable(4)
+TT.createColumn("not A and B", True, 0, "and", False, 1)
+TT.createNotColumn("not (not A and B)", 4)
 TT.display()
