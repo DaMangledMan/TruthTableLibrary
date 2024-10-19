@@ -155,7 +155,8 @@ class TruthTable:
 
 
 
-TT = TruthTable(4)
+TT = TruthTable(3)
 TT.createColumn("not A and B", True, 0, "and", False, 1)
-TT.createNotColumn("not (not A and B)", 4)
+TT.createColumn("(not A and B) xor not C", False, 3, "xor", True, 2)
+TT.createNotColumn("not ((not A and B) xor not C)", 4)
 TT.display()
