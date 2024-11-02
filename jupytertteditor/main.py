@@ -30,103 +30,92 @@ class TruthTable:
                     else:
                         col.append(False)
             self.columns.append(col)
+        self.table = {}
+        for i in range(len(self.head)):
+            self.table[self.head[i]] = [self.head[i], self.columns[-(i + 1)]]
 
     def changeColumnName(self, colIndex: int, newName: str) -> None:
         self.head[colIndex] = newName
 
     # creates a new column based on the bools of two other columns
-    def createColumn(self, colName: str, notX: bool, colIndexX: int, operator: str, notY: bool, colIndexY: int) -> None:
+    def createColumn(self, colName: str, notX: bool, colNameX: str, operator: str, notY: bool, colNameY: str) -> None:
+        col = []
         # determines what operator is being used
         match operator:
             # creates the column for the and operator
             case "and":
-                self._addEmptyColumn(colName)
-                xy = self._formatXY(notX, colIndexX, notY, colIndexY)
+                xy = self._formatXY(notX, colNameX, notY, colNameY)
                 for i in range(self.numOfRows):
                     if xy[0][i] and xy[1][i]:
-                        self.columns[0].append(True)
+                        col.append(True)
                     else:
-                        self.columns[0].append(False)
-                pass
+                        col.append(False)
             # creates the column for the or operator
             case "or":
-                self._addEmptyColumn(colName)
-                xy = self._formatXY(notX, colIndexX, notY, colIndexY)
+                xy = self._formatXY(notX, colNameX, notY, colNameY)
                 for i in range(self.numOfRows):
                     if xy[0][i] or xy[1][i]:
-                        self.columns[0].append(True)
+                        col.append(True)
                     else:
-                        self.columns[0].append(False)
-                pass
+                        col.append(False)
             # creates the column for the xor operator
             case "xor":
-                self._addEmptyColumn(colName)
-                xy = self._formatXY(notX, colIndexX, notY, colIndexY)
+                xy = self._formatXY(notX, colNameX, notY, colNameY)
                 for i in range(self.numOfRows):
                     if self._xor(xy[0][i], xy[1][i]):
-                        self.columns[0].append(True)
+                        col.append(True)
                     else:
-                        self.columns[0].append(False)
-                pass
+                        col.append(False)
             # creates the column for the implies operator
             case "implies":
-                self._addEmptyColumn(colName)
-                xy = self._formatXY(notX, colIndexX, notY, colIndexY)
+                xy = self._formatXY(notX, colNameX, notY, colNameY)
                 for i in range(self.numOfRows):
                     if self._implies(xy[0][i], xy[1][i]):
-                        self.columns[0].append(True)
+                        col.append(True)
                     else:
-                        self.columns[0].append(False)
-                pass
+                        col.append(False)
             # creates the column for the iff operator
             case "iff":
-                self._addEmptyColumn(colName)
-                xy = self._formatXY(notX, colIndexX, notY, colIndexY)
+                xy = self._formatXY(notX, colNameX, notY, colNameY)
                 for i in range(self.numOfRows):
                     if self._iff(xy[0][i], xy[1][i]):
-                        self.columns[0].append(True)
+                        col.append(True)
                     else:
-                        self.columns[0].append(False)
-                pass
+                        col.append(False)
             # catches when an improper operator is given
             case _:
                 print("Invalid operator")
                 pass
+        self.table[colName] = [colName, col]
 
-    def createNotColumn(self, colName: str, colIndex: int) -> None:
-        self.head.append(colName)
-        self.columns.insert(0, [])
-        # edits the column index to work with how its programmed
-        colNum = -(colIndex + 1)
+    def createNotColumn(self, colName: str, colNameX: str) -> None:
+        col = []
         for i in range(self.numOfRows):
-            if not self.columns[colNum][i]:
-                self.columns[0].append(True)
+            if self.table[colNameX][1][i]:
+                col.append(False)
             else:
-                self.columns[0].append(False)
+                col.append(True)
+        self.table[colName] = [colName, col]
+    
+    def removeColumn(self, colName: str) -> None:
+        del self.table[colName]
 
-    def _addEmptyColumn(self, colName: str) -> None:
-        self.head.append(colName)
-        self.columns.insert(0, [])
-
-    def _formatXY(self, notX: bool, colIndexX: int, notY: bool, colIndexY: int) -> tuple:
-        # edits the column index to work with how its programmed
-        colX = -(colIndexX + 1)
-        colY = -(colIndexY + 1)
-        # creates empty lists to store the bool values of X and Y
-        colxBools = []
-        colyBools = []
-        for i in range(self.numOfRows):
-            if notX:
-                X = not self.columns[colX][i]
-            else:
-                X = self.columns[colX][i]
-            colxBools.append(X)
-            if notY:
-                Y = not self.columns[colY][i]
-            else:
-                Y = self.columns[colY][i]
-            colyBools.append(Y)
-        return (colxBools, colyBools)
+    def _formatXY(self, notX: bool, colNameX: str, notY: bool, colNameY: str):
+        colX = self.table[colNameX][1]
+        colY = self.table[colNameY][1]
+        if notX:
+            for i in range(self.numOfRows):
+                if colX[i]:
+                    colX[i] = False
+                else:
+                    colX[i] = True
+        if notY:
+            for i in range(self.numOfRows):
+                if colY[i]:
+                    colY[i] = False
+                else:
+                    colY[i] = True
+        return [colX, colY]
 
     def _xor(self, p: bool, q: bool) -> bool:
         return p != q
@@ -139,24 +128,30 @@ class TruthTable:
 
     def display(self) -> None:
         headerLen = []
-        for i in range(len(self.head)):
-            x = len(self.head[i])
+        for i in self.table:
+            x = len(self.table[i][0])
             if x < 6:
                 x = 6
             x += 3
             headerLen.append(x)
-        for i in range(len(self.head)):
-            print(self.head[i].rjust(headerLen[i]), end=" |")
+        x = 0
+        for i in self.table:
+            print(i.rjust(headerLen[x]), end=" |")
+            x += 1
         print("")
-        for i in range(self.numOfRows):
-            for n in range(len(self.head)):
-                print(str(self.columns[-(n+1)][i]).rjust(headerLen[n]), end=" |")
+        for n in range(self.numOfRows):
+            x = 0
+            for i in self.table:
+                print(str(self.table[i][1][n]).rjust(headerLen[x]), end=" |")
+                x += 1
             print("")
 
 
 
+
 TT = TruthTable(3)
-TT.createColumn("not A and B", True, 0, "and", False, 1)
-TT.createColumn("(not A and B) xor not C", False, 3, "xor", True, 2)
-TT.createNotColumn("not ((not A and B) xor not C)", 4)
+TT.createColumn("not A and B", True, "A", "and", False, "B")
+TT.createNotColumn("not A", "A")
+TT.display()
+TT.removeColumn("C")
 TT.display()
